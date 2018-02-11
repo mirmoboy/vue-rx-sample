@@ -7,6 +7,7 @@ import VueRx from 'vue-rx'
 import { Observable } from 'rxjs/Observable'
 import { Subscription } from 'rxjs/Subscription' // Disposable if using RxJS4
 import { Subject } from 'rxjs/Subject' // required for domStreams option
+import VueCookie from 'vue-cookie'
 
 Vue.use(VueRx, {
   Observable,
@@ -18,6 +19,7 @@ import Buefy from 'buefy'
 import 'buefy/lib/buefy.css'
 
 Vue.use(Buefy)
+Vue.use(VueCookie)
 
 Vue.config.productionTip = false
 

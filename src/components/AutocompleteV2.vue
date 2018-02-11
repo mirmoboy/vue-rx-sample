@@ -1,7 +1,8 @@
 <template lang="pug">
   .container
     .control
-        input.input(v-model="search", 
+        input.input(
+            v-model="search", 
             type="text", 
             @focus="onFocusSuggestion", 
             @keydown.up.prevent="keyArrows('up')"
@@ -13,156 +14,219 @@
             ref='search'
             )
         .suggestion-container(v-show="showSuggestion", ref="dropdown")
-            .suggestion-item(v-for='(option, index) in dataSuggestion', @click="onItemClick(option.description)", :class="{ 'selected-item': option === hovered }")
+            .suggestion-item(v-if="search !==''" v-for='(option, index) in dataSuggestion', @click="onItemClick(option.description)", :class="{ 'selected-item': option === hovered }")
                 span(v-html="getValue(option, true)")
-
+            .recent-search-label(v-if="search ==='' && hasRecent") Recent searches
+            .suggestion-item(v-if="search ==='' && hasRecent" v-for='(option, index) in recentItems', @click="onItemClick(option.description)", :class="{ 'selected-item': option === hovered }")
+                span {{ option.description }}
+    br
+    br
+    button.button(@click="onSubmit") Submit
 </template>
 
 <script>
-import data from '../components/data.json'
-import _ from 'lodash'
+import data from "../components/data.json";
+import _ from "lodash";
 export default {
   data() {
     return {
-        data: data,
-        showSuggestion: false,
-        search: '',
-        hovered: '',
-        selectedIndex: 0
-    }
+      data: data,
+      showSuggestion: false,
+      search: "",
+      hovered: "",
+      selectedIndex: 0,
+      recentItems: []
+    };
   },
   computed: {
     dataSuggestion() {
-        try {
-            const arrSearch = this.search.split(';')
-            let search = arrSearch[arrSearch.length - 1] || ''
-            return this.data.filter((option) => {
-                return option.description.toString().toLowerCase()
-                    .indexOf(search.trim().toLowerCase()) >= 0
-            }).splice(0, 5)
-        } catch(err) {
-            console.log('err', err)
-        }
+      try {
+        const arrSearch = this.search.split(";");
+        let search = arrSearch[arrSearch.length - 1] || "";
+        return this.data
+          .filter(option => {
+            return (
+              option.description
+                .toString()
+                .toLowerCase()
+                .indexOf(search.trim().toLowerCase()) >= 0
+            );
+          })
+          .splice(0, 5);
+      } catch (err) {
+        console.log("err", err);
+      }
     },
     lastQuery() {
-        const arrSearch = this.search.split(';')
-        let search = arrSearch[arrSearch.length - 1] || ''
-        return search.trim()
+      const arrSearch = this.search.split(";");
+      let search = arrSearch[arrSearch.length - 1] || "";
+      return search.trim();
+    },
+    hasRecent() {
+        // return []
+      return this.recentItems.length > 0 ? true : false;
     }
   },
   watch: {
-      search() {
-        const option = this.dataSuggestion[0]
-        this.setHovered(option)
-        this.showSuggestion = true
-      }
+    search() {
+      const option = this.dataSuggestion[0];
+      this.setHovered(option);
+      this.showSuggestion = true;
+    }
   },
   methods: {
-      onFocusSuggestion() {
-          this.showSuggestion = true
-          console.log('onFocusSuggestion')
-      },
-      onItemClick(option) {
-        this.search = this.search.trim().replace(this.lastQuery, ' ')
-        this.search += ' ' + option + '; '
-        this.search = this.search.trimLeft()
-        this.showSuggestion = false
-        this.$refs.search.focus();
-      },
-      keyArrows(direction) {
-        const sum = direction === 'down' ? 1 : -1
-        if (this.showSuggestion) {
-            let index = this.dataSuggestion.indexOf(this.hovered) + sum
-            index = index > this.dataSuggestion.length - 1 ? this.dataSuggestion.length : index
-            index = index < 0 ? 0 : index
-            this.setHovered(this.dataSuggestion[index])
-            const list = this.$refs.dropdown
-            const element = list.querySelectorAll('.suggestion-item')[index]
-            if (!element) return
-            const visMin = list.scrollTop
-            const visMax = list.scrollTop + list.clientHeight - element.clientHeight
-            if (element.offsetTop < visMin) {
-                list.scrollTop = element.offsetTop
-            } else if (element.offsetTop >= visMax) {
-                list.scrollTop = (
-                    element.offsetTop -
-                    list.clientHeight +
-                    element.clientHeight
-                )
-            }
-        } else {
-            this.showSuggestion = true
+    onSubmit() {
+      if (this.search !== "") {
+        this.appendRecent(this.search);
+      }
+    },
+    appendRecent(item) {
+      const recent = this.$cookie.get("recent");
+      let _recent;
+    //   const _item = item.replace(/;/g, '').trim()
+      const _item = this.removeLastIndex(item.trim(), ';')
+      if (recent) {
+        _recent = JSON.parse(recent)
+        if (_recent.recent.items.indexOf(_item) === -1) {
+            let length = _recent.recent.items.length;
+            if (length === 5) _recent.recent.items = _recent.recent.items.splice(1, length)
+            _recent.recent.items.push(_item)
         }
+      } else {
+        _recent = {
+          recent: {
+            items: [_item]
+          }
+        };
+      }
+      this.$cookie.set("recent", JSON.stringify(_recent), { expires: "1Y" })
+    },
+    onFocusSuggestion() {
+      this.showSuggestion = true;
+      let suggestion = []
+      const recentSearchCookie = this.$cookie.get('recent')
+      const _recent = JSON.parse(recentSearchCookie)
+      if (_recent) {
+          _.each(_recent.recent.items, function(item) {
+              suggestion.push({
+                  description: item
+              })
+          })
+      }
+      this.recentItems = suggestion
+    },
+    onItemClick(option) {
+    //   this.search = this.search.trim().replace(this.lastQuery, '')
+      this.search = this.removeLastIndex(this.search.trim(), this.lastQuery)
+      this.search += " " + option.trim() + "; ";
+      this.search = this.search.trimLeft();
+      this.showSuggestion = false;
+      this.$refs.search.focus();
+    },
+    keyArrows(direction) {
+      const sum = direction === "down" ? 1 : -1;
+      if (this.showSuggestion) {
+        let index = this.dataSuggestion.indexOf(this.hovered) + sum;
+        index =
+          index > this.dataSuggestion.length - 1
+            ? this.dataSuggestion.length
+            : index;
+        index = index < 0 ? 0 : index;
+        this.setHovered(this.dataSuggestion[index]);
+        const list = this.$refs.dropdown;
+        const element = list.querySelectorAll(".suggestion-item")[index];
+        if (!element) return;
+        const visMin = list.scrollTop;
+        const visMax =
+          list.scrollTop + list.clientHeight - element.clientHeight;
+        if (element.offsetTop < visMin) {
+          list.scrollTop = element.offsetTop;
+        } else if (element.offsetTop >= visMax) {
+          list.scrollTop =
+            element.offsetTop - list.clientHeight + element.clientHeight;
+        }
+      } else {
+        this.showSuggestion = true;
+      }
     },
     onFocusOut() {
-        setTimeout( () => {
-            this.showSuggestion = false
-        }, 200);
+      setTimeout(() => {
+        this.showSuggestion = false;
+      }, 200);
     },
     getValue(option, isHighlight = false) {
-        if (!option) return
-        const value = typeof option === 'object' ? option.description : option
-        const escapedValue = this.escapeRegExpChars(this.lastQuery)
-        const regex = new RegExp(`(${escapedValue})`, 'gi')
-        return isHighlight ? value.replace(regex, '<b>$1</b>') : value
+      if (!option) return;
+      const value = typeof option === "object" ? option.description : option;
+      const escapedValue = this.escapeRegExpChars(this.lastQuery);
+      const regex = new RegExp(`(${escapedValue})`, "gi");
+      return isHighlight ? value.replace(regex, "<b>$1</b>") : value;
     },
     escapeRegExpChars(value) {
-        if (!value) return value
-        return value.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&')
+      if (!value) return value;
+      return value.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     },
     enterPressed() {
-        if (this.hovered === null) {
-            return
-        } else {
-           this.setSelected()
-        }
+      if (this.hovered === null) {
+        return;
+      } else {
+        this.setSelected();
+      }
     },
     tabPressed() {
-        if (this.hovered === null) {
-            // this.isActive = false
-            return
-        }
-        this.setSelected()
-        this.$refs.search.focus();
+      if (this.hovered === null) {
+        // this.isActive = false
+        return;
+      }
+      this.setSelected();
+      this.$refs.search.focus();
     },
     setSelected() {
-        this.search = this.search.replace(this.lastQuery, '')
-        this.search += this.hovered.description + '; '
-        this.search = this.search.trimLeft()
-        this.hovered = null
-        this.showSuggestion = false
+    //   this.search = this.search.replace(this.lastQuery, "");
+      this.search = this.removeLastIndex(this.search.trim(), this.lastQuery)
+      this.search += ' ' + this.hovered.description + "; ";
+      this.search = this.search.trimLeft();
+      this.hovered = null;
+      this.showSuggestion = false;
     },
     setHovered(option) {
-        if (option === undefined) return
-        this.hovered = option
+      if (option === undefined) return;
+      this.hovered = option;
+    },
+    removeLastIndex(char, sep) {
+        var pos = char.lastIndexOf(sep);
+        return char.substring(0, pos)
     }
   }
-}
+};
 </script>
 
 
 <style lang="scss">
 .suggestion-container {
-    left: 0;
-    min-width: 12rem;
-    padding-top: 4px;
-    position: absolute;
-    top: 100%;
-    z-index: 20;
+  left: 0;
+  min-width: 12rem;
+  padding-top: 4px;
+  position: absolute;
+  top: 100%;
+  z-index: 20;
 }
 .suggestion-item {
-    background-color: white;
-    border-radius: 3px;
-    -webkit-box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
-    box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
-    padding-bottom: 0.5rem;
-    padding-top: 0.5rem;
-    
-    &:hover {
-        background-color: #dedede;
-    }
+  background-color: white;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
+    0 0 0 1px rgba(10, 10, 10, 0.1);
+  box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
+
+  &:hover {
+    background-color: #dedede;
+  }
 }
 .selected-item {
-    background-color: #dedede;
+  background-color: #dedede;
+}
+.recent-search-label {
+  background-color: #dedede;
 }
 </style>
