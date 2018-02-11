@@ -1,0 +1,40 @@
+[
+    {
+        "suggestion": true,
+        "description": "Angular"
+    },
+    {
+        "description": "Angular 2"
+    },
+    {
+        "description": "Aurelia"
+    },
+    {
+        "description": "Backbone"
+    },
+    {
+        "description": "Ember"
+    },
+    {
+        "description": "jQuery"
+    },
+    {
+        "description": "Meteor"
+    },
+    {
+        "description": "Node.js"
+    },
+    {
+        "description": "Polymer"
+    },
+    {
+        "description": "React"
+    },
+    {
+        "description": "RxJS"
+    },
+    {
+        "suggestion": true,
+        "description": "Vue.js"
+    }
+]

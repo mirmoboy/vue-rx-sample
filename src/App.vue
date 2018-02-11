@@ -1,17 +1,19 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <HelloWorld/>
+    <autocomplete-component></autocomplete-component>
   </div>
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld'
+// import Autocomplete from './components/Autocomplete'
+import Autocomplete from './components/AutocompleteV2'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    HelloWorld,
+    'autocomplete-component': Autocomplete
   }
 }
 </script>
