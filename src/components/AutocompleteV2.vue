@@ -17,7 +17,7 @@
             .suggestion-item(v-if="search !==''" v-for='(option, index) in dataSuggestion', @click="onItemClick(option.description)", :class="{ 'selected-item': option === hovered }")
                 span(v-html="getValue(option, true)")
             .recent-search-label(v-if="search ==='' && hasRecent") Recent searches
-            .suggestion-item(v-if="search ==='' && hasRecent" v-for='(option, index) in recentItems', @click="onItemClick(option.description)", :class="{ 'selected-item': option === hovered }")
+            .suggestion-item(v-if="search ==='' && hasRecent" v-for='(option, index) in recentSearches', @click="onItemClick(option.description)", :class="{ 'selected-item': option === hovered }")
                 span {{ option.description }}
     br
     br
@@ -65,6 +65,9 @@ export default {
     hasRecent() {
         // return []
       return this.recentItems.length > 0 ? true : false;
+    },
+    recentSearches() {
+      return _.reverse(this.recentItems)
     }
   },
   watch: {
@@ -81,17 +84,21 @@ export default {
       }
     },
     appendRecent(item) {
+      if (item === '') return
       const recent = this.$cookie.get("recent");
       let _recent;
-    //   const _item = item.replace(/;/g, '').trim()
       const _item = this.removeLastIndex(item.trim(), ';')
       if (recent) {
         _recent = JSON.parse(recent)
-        if (_recent.recent.items.indexOf(_item) === -1) {
-            let length = _recent.recent.items.length;
-            if (length === 5) _recent.recent.items = _recent.recent.items.splice(1, length)
-            _recent.recent.items.push(_item)
+        let length = _recent.recent.items.length;
+        const indexOf = _recent.recent.items.indexOf(_item)
+        if (indexOf > -1) {
+          _recent.recent.items = _.remove(_recent.recent.items, function(n) {
+            return n !== _item;
+          })
         }
+        if (length === 5) _recent.recent.items = _recent.recent.items.splice(1, length)
+        _recent.recent.items.push(_item)
       } else {
         _recent = {
           recent: {
@@ -116,7 +123,6 @@ export default {
       this.recentItems = suggestion
     },
     onItemClick(option) {
-    //   this.search = this.search.trim().replace(this.lastQuery, '')
       this.search = this.removeLastIndex(this.search.trim(), this.lastQuery)
       this.search += " " + option.trim() + "; ";
       this.search = this.search.trimLeft();
@@ -127,10 +133,7 @@ export default {
       const sum = direction === "down" ? 1 : -1;
       if (this.showSuggestion) {
         let index = this.dataSuggestion.indexOf(this.hovered) + sum;
-        index =
-          index > this.dataSuggestion.length - 1
-            ? this.dataSuggestion.length
-            : index;
+        index = index > this.dataSuggestion.length - 1 ? this.dataSuggestion.length : index;
         index = index < 0 ? 0 : index;
         this.setHovered(this.dataSuggestion[index]);
         const list = this.$refs.dropdown;
