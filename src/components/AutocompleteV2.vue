@@ -8,7 +8,8 @@
             @keydown.down.prevent="keyArrows('down')"
             @keydown.enter.prevent="enterPressed"
             @keydown.tab.prevent="tabPressed"
-            
+            @blur="onFocusOut",
+            @click="showSuggestion = true"
             ref='search'
             )
         .suggestion-container(v-show="showSuggestion", ref="dropdown")
@@ -53,6 +54,7 @@ export default {
       search() {
         const option = this.dataSuggestion[0]
         this.setHovered(option)
+        this.showSuggestion = true
       }
   },
   methods: {
@@ -91,6 +93,11 @@ export default {
         } else {
             this.showSuggestion = true
         }
+    },
+    onFocusOut() {
+        setTimeout( () => {
+            this.showSuggestion = false
+        }, 200);
     },
     getValue(option, isHighlight = false) {
         if (!option) return
