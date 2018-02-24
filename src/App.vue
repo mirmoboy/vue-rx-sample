@@ -1,19 +1,19 @@
 <template>
   <div id="app">
-    <autocomplete-component></autocomplete-component>
+    <croppie></croppie>
   </div>
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld'
 // import Autocomplete from './components/Autocomplete'
-import Autocomplete from './components/AutocompleteV2'
+import Croppie from './components/Croppie'
 
 export default {
   name: 'App',
   components: {
     HelloWorld,
-    'autocomplete-component': Autocomplete
+    'croppie': Croppie
   }
 }
 </script>

@@ -8,6 +8,8 @@ import { Observable } from 'rxjs/Observable'
 import { Subscription } from 'rxjs/Subscription' // Disposable if using RxJS4
 import { Subject } from 'rxjs/Subject' // required for domStreams option
 import VueCookie from 'vue-cookie'
+import VueCroppie from 'vue-croppie'
+
 
 Vue.use(VueRx, {
   Observable,
@@ -20,6 +22,7 @@ import 'buefy/lib/buefy.css'
 
 Vue.use(Buefy)
 Vue.use(VueCookie)
+Vue.use(VueCroppie)
 
 Vue.config.productionTip = false
 
