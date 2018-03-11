@@ -1,19 +1,25 @@
-<template>
-  <div id="app">
-    <croppie></croppie>
-  </div>
+<template lang="pug">
+  div#app
+    mobile-input(:mobile.sync='mobile')
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld'
 // import Autocomplete from './components/Autocomplete'
 import Croppie from './components/Croppie'
+import MobileInput from '../src/components/MobileInput'
 
 export default {
   name: 'App',
   components: {
     HelloWorld,
-    'croppie': Croppie
+    'croppie': Croppie,
+    MobileInput
+  },
+  data() {
+    return {
+      mobile: '112341234'
+    }
   }
 }
 </script>
